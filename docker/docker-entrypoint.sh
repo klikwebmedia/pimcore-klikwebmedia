@@ -29,6 +29,11 @@ else
   echo "Pimcore already installed, skipping installer."
 fi
 
+# The installer above runs as root (no USER set), so anything it creates under var/
+# (logs, cache) ends up root-owned. php-fpm's worker processes run as www-data, so
+# without this they can't write their own log/cache files afterwards.
+chown -R www-data:www-data /var/www/html/var
+
 # Hand off to the base php image's entrypoint, which then execs "$@" — the Dockerfile's
 # CMD ["/usr/bin/supervisord"] (the supervisord flavor's own default command, restated
 # since our custom ENTRYPOINT above replaces it).
