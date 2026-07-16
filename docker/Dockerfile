@@ -18,6 +18,10 @@ WORKDIR /var/www/html
 
 COPY --from=build --chown=www-data:www-data /app /var/www/html
 COPY --chmod=755 docker/docker-entrypoint.sh /usr/local/bin/pimcore-docker-entrypoint.sh
+# The supervisord-flavor base image only ships supervisord.conf (which includes
+# /etc/supervisor/conf.d/*.conf) — it doesn't bake in a php-fpm program definition itself,
+# so without this supervisord starts with nothing to run.
+COPY docker/supervisor-php-fpm.conf /etc/supervisor/conf.d/php-fpm.conf
 
 ENTRYPOINT ["/usr/local/bin/pimcore-docker-entrypoint.sh"]
 # The supervisord-flavor base image's own CMD (which we override with our ENTRYPOINT above)
