@@ -1,6 +1,7 @@
 services:
   nginx:
     image: ${NGINX_IMAGE_TAG:-ghcr.io/klikwebmedia/pimcore-klikwebmedia-nginx:latest}
+    pull_policy: always
     restart: unless-stopped
     volumes:
       - pimcore_public:/var/www/html/public:ro
@@ -12,6 +13,7 @@ services:
 
   php:
     image: ${IMAGE_TAG:-ghcr.io/klikwebmedia/pimcore-klikwebmedia:latest}
+    pull_policy: always
     restart: unless-stopped
     environment:
       APP_ENV: prod
