@@ -11,6 +11,8 @@ WORKDIR /app
 # Once the project is stable, replace this with a committed composer.json/composer.lock
 # for reproducible builds instead of always pulling latest.
 RUN composer create-project --no-scripts --no-dev --prefer-dist --no-interaction pimcore/skeleton .
+COPY docker/patch-bundles.php /tmp/patch-bundles.php
+RUN php /tmp/patch-bundles.php
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
 FROM pimcore/pimcore:${PIMCORE_IMAGE_TAG}
