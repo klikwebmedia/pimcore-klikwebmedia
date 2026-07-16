@@ -1,0 +1,62 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - pimcore_public:/var/www/html/public:ro
+    depends_on:
+      - php
+    expose:
+      - "80"
+
+  php:
+    image: ${IMAGE_TAG:-ghcr.io/klikwebmedia/pimcore-klikwebmedia:latest}
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: mariadb
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pimcore}
+      MYSQL_USER: ${MYSQL_USER:-pimcore}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      APP_SECRET: ${APP_SECRET}
+      PIMCORE_ADMIN_USER: ${PIMCORE_ADMIN_USER:-admin}
+      PIMCORE_ADMIN_PASSWORD: ${PIMCORE_ADMIN_PASSWORD}
+      REDIS_HOST: redis
+    volumes:
+      - pimcore_var:/var/www/html/var
+      - pimcore_public:/var/www/html/public
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  mariadb:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-pimcore}
+      MARIADB_USER: ${MYSQL_USER:-pimcore}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - pimcore_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
+    volumes:
+      - pimcore_redis:/data
+
+volumes:
+  pimcore_var:
+  pimcore_public:
+  pimcore_db:
+  pimcore_redis:
