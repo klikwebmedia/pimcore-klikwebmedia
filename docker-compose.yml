@@ -31,6 +31,9 @@ services:
       MERCURE_URL: https://pimcore.klikwebmedia.com/.well-known/mercure
       MERCURE_SERVER_URL: http://mercure:80/.well-known/mercure
       REDIS_HOST: redis
+      PIMCORE_INSTANCE_IDENTIFIER: ${PIMCORE_INSTANCE_IDENTIFIER}
+      PIMCORE_ENCRYPTION_SECRET: ${PIMCORE_ENCRYPTION_SECRET}
+      PIMCORE_PRODUCT_KEY: ${PIMCORE_PRODUCT_KEY:-}
     volumes:
       - pimcore_var:/var/www/html/var
       - pimcore_public:/var/www/html/public
