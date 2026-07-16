@@ -7,6 +7,7 @@ services:
       - pimcore_public:/var/www/html/public:ro
     depends_on:
       - php
+      - mercure
     expose:
       - "80"
 
@@ -14,14 +15,22 @@ services:
     image: ${IMAGE_TAG:-ghcr.io/klikwebmedia/pimcore-klikwebmedia:latest}
     restart: unless-stopped
     environment:
+      APP_ENV: prod
+      PIMCORE_DEV_MODE: "false"
+      APPLICATION_SECRET: ${APPLICATION_SECRET}
+      DATABASE_URL: mysql://${MYSQL_USER:-pimcore}:${MYSQL_PASSWORD}@mariadb:3306/${MYSQL_DATABASE:-pimcore}
       MYSQL_HOST: mariadb
       MYSQL_PORT: 3306
       MYSQL_DATABASE: ${MYSQL_DATABASE:-pimcore}
       MYSQL_USER: ${MYSQL_USER:-pimcore}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      APP_SECRET: ${APP_SECRET}
       PIMCORE_ADMIN_USER: ${PIMCORE_ADMIN_USER:-admin}
       PIMCORE_ADMIN_PASSWORD: ${PIMCORE_ADMIN_PASSWORD}
+      PIMCORE_OPENSEARCH_DSN: opensearch://opensearch:9200?ssl=false
+      PIMCORE_MESSENGER_TRANSPORT_DSN_PREFIX: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672/%2f/
+      MERCURE_JWT_KEY: ${MERCURE_JWT_KEY}
+      MERCURE_URL: https://pimcore.klikwebmedia.com/.well-known/mercure
+      MERCURE_SERVER_URL: http://mercure:80/.well-known/mercure
       REDIS_HOST: redis
     volumes:
       - pimcore_var:/var/www/html/var
@@ -30,6 +39,10 @@ services:
       mariadb:
         condition: service_healthy
       redis:
+        condition: service_started
+      opensearch:
+        condition: service_started
+      rabbitmq:
         condition: service_started
 
   mariadb:
@@ -55,8 +68,37 @@ services:
     volumes:
       - pimcore_redis:/data
 
+  opensearch:
+    image: opensearchproject/opensearch:2
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - pimcore_opensearch:/usr/share/opensearch/data
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - pimcore_rabbitmq:/var/lib/rabbitmq
+
+  mercure:
+    image: dunglas/mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ":80"
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_KEY}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_KEY}
+
 volumes:
   pimcore_var:
   pimcore_public:
   pimcore_db:
   pimcore_redis:
+  pimcore_opensearch:
+  pimcore_rabbitmq:

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# Idempotent first-boot installer for the Pimcore demo package.
+# Idempotent first-boot installer for the Pimcore skeleton package.
 # Marker file lives on the persisted /var/www/html/var volume, so it survives
 # redeploys but not a volume wipe (which is the intended "reinstall" trigger).
 MARKER=/var/www/html/var/.pimcore-installed
@@ -17,16 +17,9 @@ if [ ! -f "$MARKER" ]; then
   wait_for_mysql
 
   echo "Running first-time Pimcore installation..."
-  php bin/console assets:install --symlink --relative --no-interaction
-
-  vendor/bin/pimcore-install \
-    --mysql-host-socket="${MYSQL_HOST:-mariadb}" \
-    --mysql-username="${MYSQL_USER}" \
-    --mysql-password="${MYSQL_PASSWORD}" \
-    --mysql-database="${MYSQL_DATABASE}" \
-    --admin-username="${PIMCORE_ADMIN_USER:-admin}" \
-    --admin-password="${PIMCORE_ADMIN_PASSWORD}" \
-    --no-interaction
+  # SkeletonProfile reads DB connection from DATABASE_URL and admin credentials from
+  # PIMCORE_ADMIN_USER/PIMCORE_ADMIN_PASSWORD, all set as container env vars already.
+  vendor/bin/pimcore-install --install-profile='App\Installer\SkeletonProfile' --no-interaction
 
   php bin/console cache:clear --no-interaction
 
