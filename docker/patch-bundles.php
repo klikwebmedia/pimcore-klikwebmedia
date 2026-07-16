@@ -6,7 +6,7 @@
 $file = 'config/bundles.php';
 $content = file_get_contents($file);
 
-$additions = "    Pimcore\\Bundle\\OpensearchClientBundle\\PimcoreOpenSearchClientBundle::class => ['all' => true],\n"
+$additions = "    Pimcore\\Bundle\\OpenSearchClientBundle\\PimcoreOpenSearchClientBundle::class => ['all' => true],\n"
            . "    Pimcore\\Bundle\\StaticResolverBundle\\PimcoreStaticResolverBundle::class => ['all' => true],\n";
 
 if (strpos($content, 'PimcoreOpenSearchClientBundle') === false) {
