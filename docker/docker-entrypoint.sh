@@ -29,7 +29,7 @@ else
   echo "Pimcore already installed, skipping installer."
 fi
 
-# Hand off to the base image's own entrypoint/supervisor (starts php-fpm, cron, etc.).
-# Verify this matches the actual entrypoint of pimcore/pimcore:${PIMCORE_IMAGE_TAG}
-# before relying on this in production.
+# Hand off to the base php image's entrypoint, which then execs "$@" — the Dockerfile's
+# CMD ["/usr/bin/supervisord"] (the supervisord flavor's own default command, restated
+# since our custom ENTRYPOINT above replaces it).
 exec docker-php-entrypoint "$@"

@@ -20,3 +20,7 @@ COPY --from=build --chown=www-data:www-data /app /var/www/html
 COPY --chmod=755 docker/docker-entrypoint.sh /usr/local/bin/pimcore-docker-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/pimcore-docker-entrypoint.sh"]
+# The supervisord-flavor base image's own CMD (which we override with our ENTRYPOINT above)
+# is ["/usr/bin/supervisord"] — restate it so it's passed through as "$@" and actually starts
+# php-fpm/cron/workers after our install logic runs, instead of exiting immediately.
+CMD ["/usr/bin/supervisord"]
